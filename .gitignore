@@ -1,0 +1,4 @@
+.vscode/
+.idea/
+rest_api/
+__pycache__/
