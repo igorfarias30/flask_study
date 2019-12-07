@@ -1,4 +1,5 @@
 from flask_restful import Resource, reqparse
+from models.hotel import HotelModel
 from flask import jsonify
 
 hoteis = [
@@ -24,23 +25,6 @@ hoteis = [
         'cidade': 'Caucaia'
     }
 ]
-
-class HotelModel:
-    def __init__(self, hotel_id, name, estrelas, diaria, cidade):
-        self.hotel_id = hotel_id
-        self.name = name
-        self.estrelas = estrelas
-        self.diaria = diaria
-        self.cidade = cidade
-    
-    def json(self):
-        return {
-            'hotel_id': self.hotel_id,
-            'name': self.name, 
-            'estrelas': self.estrelas,
-            'diaria': self.diaria,
-            'cidade': self.cidade
-        }
 
 class Hoteis(Resource):
     def get(self):

@@ -2,3 +2,8 @@
 .idea/
 rest_api/
 __pycache__/
+
+#databases
+*.db
+
+run.py
