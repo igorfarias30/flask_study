@@ -2,35 +2,80 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required
 from flask import jsonify, make_response
 from models.hotel import HotelModel
+import sqlite3
 
-hoteis = [
-    {
-        "hotel_id": "alpha",
-        "name": "Alpha Hotel", 
-        "estrelas": 4.3,
-        "diaria": 420.34,
-        "cidade": "Fortaleza"
-    },
-    {
-        "hotel_id": "bravo",
-        "name": "Bravo Hotel", 
-        "estrelas": 4.4,
-        "diaria": 380.90,
-        "cidade": "Teresina"
-    },
-    {
-        "hotel_id": "charlie",
-        "name": "Charlie Hotel", 
-        "estrelas": 4.3,
-        "diaria": 420.34,
-        "cidade": "Caucaia"
-    }
-]
+def normalize_path_params(cidade = None,
+                        estrelas_min = 0,
+                        estrelas_max = 5,
+                        diaria_min = 0,
+                        diaria_max = 10000,
+                        limit = 50,
+                        offset = 0, **dados):
+
+        if cidade:
+            return {
+                'estrelas_min': estrelas_min,
+                'estrelas_max': estrelas_max,
+                'diaria_min': diaria_min,
+                'diaria_max': diaria_max,
+                'cidade': cidade,
+                'limit': limit,
+                'offset0': offset
+        }
+        
+        return {
+                'estrelas_min': estrelas_min,
+                'estrelas_max': estrelas_max,
+                'diaria_min': diaria_min,
+                'diaria_max': diaria_max,
+                'limit': limit,
+                'offset0': offset
+        }
+
+# path /hoteis?cidade=Rio de Janeiro&estrelas_min=4&diaria_max=400
+path_params = reqparse.RequestParser()
+path_params.add_argument('cidade', type = str)
+path_params.add_argument('estrelas_max', type = float)
+path_params.add_argument('estrelas_min', type = float)
+path_params.add_argument('diaria_max', type = float)
+path_params.add_argument('diaria_min', type = float)
+path_params.add_argument('limit', type = float)
+path_params.add_argument('off_set', type = float)
 
 class Hoteis(Resource):
     def get(self):
-        return make_response(jsonify({
-                                        "hoteis": [hotel.json() for hotel in HotelModel.query.all()]}), 200)
+        connection = sqlite3.connect('banco.db')
+        cursor = connection.cursor()
+
+        dados = path_params.parse_args()
+        dados_validos = {key: dados[key] for key in dados.keys() if dados[key] is not None}
+        parametros = normalize_path_params(**dados_validos)
+        
+        if not parametros.get('cidade'):
+            consulta = " SELECT * from hoteis \
+                            WHERE (estrelas >= ? and estrelas <= ?) \
+                            AND (diaria >= ? and diaria <= ?) \
+                            LIMIT ? OFFSET ?"
+        else:
+             consulta = " SELECT * from hoteis \
+                            WHERE (estrelas >= ? and estrelas <= ?) \
+                            AND (diaria >= ? and diaria <= ?) \
+                            AND cidade = ? LIMIT ? OFFSET ?"
+
+        tupla = tuple([parametros[chave] for chave in parametros])
+        result = cursor.execute(consulta, tupla)
+
+        hoteis = []
+        for line in result:
+            hoteis.append({
+                'hotel_id': line[0],
+                'name': line[1],
+                'estrelas': line[2],
+                'diaria': line[2],
+                'cidade': line[4]
+            })
+
+        return make_response(jsonify({"hoteis": hoteis}), 200)
 
 class Hotel(Resource):
 
