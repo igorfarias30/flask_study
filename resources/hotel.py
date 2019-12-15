@@ -1,35 +1,36 @@
 from flask_restful import Resource, reqparse
+from flask_jwt_extended import jwt_required
 from flask import jsonify, make_response
 from models.hotel import HotelModel
 
 hoteis = [
     {
-        'hotel_id': 'alpha',
-        'name': 'Alpha Hotel', 
-        'estrelas': 4.3,
-        'diaria': 420.34,
-        'cidade': 'Fortaleza'
+        "hotel_id": "alpha",
+        "name": "Alpha Hotel", 
+        "estrelas": 4.3,
+        "diaria": 420.34,
+        "cidade": "Fortaleza"
     },
     {
-        'hotel_id': 'bravo',
-        'name': 'Bravo Hotel', 
-        'estrelas': 4.4,
-        'diaria': 380.90,
-        'cidade': 'Teresina'
+        "hotel_id": "bravo",
+        "name": "Bravo Hotel", 
+        "estrelas": 4.4,
+        "diaria": 380.90,
+        "cidade": "Teresina"
     },
     {
-        'hotel_id': 'charlie',
-        'name': 'Charlie Hotel', 
-        'estrelas': 4.3,
-        'diaria': 420.34,
-        'cidade': 'Caucaia'
+        "hotel_id": "charlie",
+        "name": "Charlie Hotel", 
+        "estrelas": 4.3,
+        "diaria": 420.34,
+        "cidade": "Caucaia"
     }
 ]
 
 class Hoteis(Resource):
     def get(self):
         return make_response(jsonify({
-                                        "hoteis": hotel.json() for hotel in HotelModel.query.all()}), 200)
+                                        "hoteis": [hotel.json() for hotel in HotelModel.query.all()]}), 200)
 
 class Hotel(Resource):
 
@@ -53,6 +54,7 @@ class Hotel(Resource):
 
         return make_response(jsonify({'message': 'Hotel not found'}), 404) # not found
 
+    @jwt_required
     def post(self, hotel_id):
         
         if HotelModel.findHotel(hotel_id):
@@ -65,7 +67,8 @@ class Hotel(Resource):
         except:
             return {"message": "An internal error ocurred trying to save hotel."}, 500 # Internal Server Error
         return make_response(hotel.json(), 200)
-
+    
+    @jwt_required
     def put(self, hotel_id):
         
         dados = Hotel.arguments.parse_args()
@@ -80,6 +83,7 @@ class Hotel(Resource):
         hotel.save_hotel()
         return make_response(hotel.json(), 200)
 
+    @jwt_required
     def delete(self, hotel_id):
 
         hotel = HotelModel.findHotel(hotel_id)
