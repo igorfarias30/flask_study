@@ -1,5 +1,6 @@
 from sql_alchemy import banco
 
+
 class HotelModel(banco.Model):
     __tablename__ = "hoteis" 
     hotel_id = banco.Column(banco.String, primary_key = True)
@@ -29,11 +30,12 @@ class HotelModel(banco.Model):
         banco.session.add(self) #add the self object
         banco.session.commit()
 
-    def update_hotel(self, name, estrelas, diaria, cidade):
+    def update_hotel(self, name, estrelas, diaria, cidade, site_id):
         self.name = name
         self.estrelas = estrelas
         self.diaria = diaria
         self.cidade = cidade
+        self.site_id = site_id
 
     def delete_hotel(self):
         banco.session.delete(self)

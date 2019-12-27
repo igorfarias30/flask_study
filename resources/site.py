@@ -2,9 +2,11 @@ from flask import jsonify, make_response
 from flask_restful import Resource
 from models.site import SiteModel
 
+
 class Sites(Resource):
     def get(self):
         return {'sites': [site.json() for site in SiteModel.query.all()]}
+
 
 class Site(Resource):
     def get(self, url):

@@ -1,5 +1,6 @@
 from sql_alchemy import banco
 
+
 class SiteModel(banco.Model):
     __tablename__ = 'sites'
 
@@ -9,6 +10,13 @@ class SiteModel(banco.Model):
 
     def __init__(self, url):
         self.url = url
+
+    @classmethod
+    def findSiteById(cls, site_id):
+        site = cls.query.filter_by(site_id=site_id).first()
+        if site:
+            return site
+        return None
 
     @classmethod
     def findSite(cls, url):
@@ -22,8 +30,11 @@ class SiteModel(banco.Model):
         banco.session.commit()
 
     def deleteSite(self):
+        # deleting all hoteis associeted with the site when delete this site
+        _ = [hotel.delete_hotel() for hotel in self.hoteis] 
+
         banco.session.delete(self)
-        banco.sessiom.commit()
+        banco.session.commit()
 
     def json(self):
         return {

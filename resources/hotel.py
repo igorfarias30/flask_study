@@ -2,9 +2,9 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required
 from flask import jsonify, make_response
 from models.hotel import HotelModel
-import sqlite3
-
+from models.site import SiteModel
 from resources.filters import *
+import sqlite3
 
 # path /hoteis?cidade=Rio de Janeiro&estrelas_min=4&diaria_max=400
 path_params = reqparse.RequestParser()
@@ -15,6 +15,7 @@ path_params.add_argument('diaria_max', type = float)
 path_params.add_argument('diaria_min', type = float)
 path_params.add_argument('limit', type = float)
 path_params.add_argument('off_set', type = float)
+
 
 class Hoteis(Resource):
     def get(self):
@@ -38,11 +39,12 @@ class Hoteis(Resource):
                 'name': line[1],
                 'estrelas': line[2],
                 'diaria': line[2],
-                'cidade': line[4],
+                'cidade': line[3],
                 'site_id': line[5]
             })
 
         return make_response(jsonify({"hoteis": hoteis}), 200)
+
 
 class Hotel(Resource):
 
@@ -52,12 +54,6 @@ class Hotel(Resource):
     arguments.add_argument('diaria', type = float)
     arguments.add_argument('cidade')
     arguments.add_argument('site_id', type=int, required=True, help="Every hotel need to be linked in a site")
-
-    def findHotel(self, hotel_id):
-        for hotel in hoteis:
-            if hotel['hotel_id'] == hotel_id:
-                return hotel
-        return None 
 
     def get(self, hotel_id):
         
@@ -75,6 +71,10 @@ class Hotel(Resource):
 
         dados = Hotel.arguments.parse_args()
         hotel = HotelModel(hotel_id, **dados)
+
+        if not SiteModel.findSiteById(dados.get('site_id')):
+            return make_response(jsonify({'message': 'The hotel must be associated to a valid site id.'}), 400)
+
         try:
             hotel.save_hotel()
         except:
