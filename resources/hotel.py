@@ -4,33 +4,7 @@ from flask import jsonify, make_response
 from models.hotel import HotelModel
 import sqlite3
 
-def normalize_path_params(cidade = None,
-                        estrelas_min = 0,
-                        estrelas_max = 5,
-                        diaria_min = 0,
-                        diaria_max = 10000,
-                        limit = 50,
-                        offset = 0, **dados):
-
-        if cidade:
-            return {
-                'estrelas_min': estrelas_min,
-                'estrelas_max': estrelas_max,
-                'diaria_min': diaria_min,
-                'diaria_max': diaria_max,
-                'cidade': cidade,
-                'limit': limit,
-                'offset0': offset
-        }
-        
-        return {
-                'estrelas_min': estrelas_min,
-                'estrelas_max': estrelas_max,
-                'diaria_min': diaria_min,
-                'diaria_max': diaria_max,
-                'limit': limit,
-                'offset0': offset
-        }
+from resources.filters import *
 
 # path /hoteis?cidade=Rio de Janeiro&estrelas_min=4&diaria_max=400
 path_params = reqparse.RequestParser()
@@ -50,20 +24,12 @@ class Hoteis(Resource):
         dados = path_params.parse_args()
         dados_validos = {key: dados[key] for key in dados.keys() if dados[key] is not None}
         parametros = normalize_path_params(**dados_validos)
-        
-        if not parametros.get('cidade'):
-            consulta = " SELECT * from hoteis \
-                            WHERE (estrelas >= ? and estrelas <= ?) \
-                            AND (diaria >= ? and diaria <= ?) \
-                            LIMIT ? OFFSET ?"
-        else:
-             consulta = " SELECT * from hoteis \
-                            WHERE (estrelas >= ? and estrelas <= ?) \
-                            AND (diaria >= ? and diaria <= ?) \
-                            AND cidade = ? LIMIT ? OFFSET ?"
 
         tupla = tuple([parametros[chave] for chave in parametros])
-        result = cursor.execute(consulta, tupla)
+        if not parametros.get('cidade'):
+            result = cursor.execute(consulta_sem_cidade, tupla)
+        else:
+             result = cursor.execute(consulta_com_cidade, tupla)
 
         hoteis = []
         for line in result:
@@ -72,7 +38,8 @@ class Hoteis(Resource):
                 'name': line[1],
                 'estrelas': line[2],
                 'diaria': line[2],
-                'cidade': line[4]
+                'cidade': line[4],
+                'site_id': line[5]
             })
 
         return make_response(jsonify({"hoteis": hoteis}), 200)
@@ -84,6 +51,7 @@ class Hotel(Resource):
     arguments.add_argument('estrelas', type = float, required = True, help = "The field 'estrelas' cannot be blank")
     arguments.add_argument('diaria', type = float)
     arguments.add_argument('cidade')
+    arguments.add_argument('site_id', type=int, required=True, help="Every hotel need to be linked in a site")
 
     def findHotel(self, hotel_id):
         for hotel in hoteis:
