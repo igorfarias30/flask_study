@@ -7,3 +7,6 @@ __pycache__/
 *.db
 
 run.py
+
+#jupyter files
+.ipynb_checkpoints
