@@ -1,4 +1,4 @@
-from resources.user import User, UserRegister, UserLogin, UserLogout
+from resources.user import User, UserRegister, UserLogin, UserLogout, UserConfirm
 from resources.hotel import Hoteis, Hotel
 from flask_jwt_extended import JWTManager
 from flask_restful import Resource, Api
@@ -41,6 +41,9 @@ api.add_resource(UserLogout, '/logout')
 #Sites endpoints
 api.add_resource(Sites, '/sites')
 api.add_resource(Site, '/site/<string:url>')
+
+api.add_resource(UserConfirm, '/confirmacao/<int:user_id>')
+
 
 if __name__ == "__main__":
     from sql_alchemy import banco
