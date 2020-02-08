@@ -10,3 +10,5 @@ run.py
 
 #jupyter files
 .ipynb_checkpoints
+
+configuration.py

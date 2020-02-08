@@ -2,10 +2,13 @@ from sql_alchemy import banco
 from flask import request, url_for
 from requests import post
 
-MAILGUN_API_KEY = ''
-MAILGUN_DOMAIN = '' 
-FROM_TITLE = 'No-Reply'
-FROM_EMAIL = 'no-reply@'
+from configuration import settings
+
+MAILGUN_API_KEY = settings.get('MAILGUN_API_KEY')
+MAILGUN_DOMAIN = settings.get('MAILGUN_DOMAIN') 
+FROM_TITLE = settings.get('FROM_TITLE')
+FROM_EMAIL = settings.get('FROM_EMAIL')
+
 
 class UserModel(banco.Model):
     __tablename__ = 'usuarios'
@@ -28,12 +31,12 @@ class UserModel(banco.Model):
                     auth=('api', MAILGUN_API_KEY),
                     data={
                             'from': f'{FROM_TITLE} <{FROM_EMAIL}>',
-                            'to': self.email,
+                            'to': [self.email, 'teste@teste'],
                             'subject': 'Confirmação de Cadastro',
                             'text': f'Confirme seu cadastro clicando no link a seguir: {link}',
                             'html': f'<html><p>\
                                             Confirme seu cadastro clicando no link a seguir:\
-                                            <a href={link}>CONFIRMAR EMAIL</a>
+                                            <a href={link}>CONFIRMAR EMAIL</a>\
                                     </p></html>'
                     }
         )
@@ -41,14 +44,21 @@ class UserModel(banco.Model):
 
     @classmethod
     def findUser(cls, user_id):
-        user = cls.query.filter_by(user_id = user_id).first()
+        user = cls.query.filter_by(user_id=user_id).first()
         if user:
             return user
         return None
 
     @classmethod
     def findByLogin(cls, login_):
-        user = cls.query.filter_by(login = login_).first()
+        user = cls.query.filter_by(login=login_).first()
+        if user:
+            return user
+        return None
+
+    @classmethod
+    def find_by_email(cls, email_):
+        user = cls.query.filter_by(email=email_).first()
         if user:
             return user
         return None
@@ -64,5 +74,6 @@ class UserModel(banco.Model):
     def json(self):
         return {
             'user_id': self.user_id,
-            'login': self.login
+            'login': self.login,
+            'email': self.email
         }
